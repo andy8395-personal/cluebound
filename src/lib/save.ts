@@ -1,23 +1,30 @@
 import type { SaveState } from "@/lib/types";
 
-const KEY = "cluebound-save-v1";
+const KEY = "cluebound-save-v2";
 
 export const emptySave = (): SaveState => ({
   playerProfile: null,
-  chapterProgress: { completedChapterIds: [] },
+  chapterProgress: { completedChapterIds: [], levelCleared: {} },
   activeRun: null,
 });
 
 export function loadSave(): SaveState {
   if (typeof window === "undefined") return emptySave();
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = localStorage.getItem(KEY) ?? localStorage.getItem("cluebound-save-v1");
     if (!raw) return emptySave();
-    const parsed = JSON.parse(raw) as SaveState;
-    if (!parsed || typeof parsed !== "object") return emptySave();
+    const parsed = JSON.parse(raw) as Partial<SaveState> & {
+      chapterProgress?: {
+        completedChapterIds?: string[];
+        levelCleared?: Record<string, number>;
+      };
+    };
     return {
       playerProfile: parsed.playerProfile ?? null,
-      chapterProgress: parsed.chapterProgress ?? { completedChapterIds: [] },
+      chapterProgress: {
+        completedChapterIds: parsed.chapterProgress?.completedChapterIds ?? [],
+        levelCleared: parsed.chapterProgress?.levelCleared ?? {},
+      },
       activeRun: parsed.activeRun ?? null,
     };
   } catch {
@@ -33,4 +40,5 @@ export function persistSave(state: SaveState) {
 export function clearSave() {
   if (typeof window === "undefined") return;
   localStorage.removeItem(KEY);
+  localStorage.removeItem("cluebound-save-v1");
 }

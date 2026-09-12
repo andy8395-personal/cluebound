@@ -1,41 +1,40 @@
 "use client";
 
-import { AccusationScreen } from "@/components/game/AccusationScreen";
-import { BoardScreen } from "@/components/game/BoardScreen";
-import { BriefingScreen } from "@/components/game/BriefingScreen";
-import { CampaignScreen } from "@/components/game/CampaignScreen";
-import { DossierScreen } from "@/components/game/DossierScreen";
-import { GameOverScreen, VictoryScreen } from "@/components/game/EndScreens";
+import { HomeScreen, SetupScreen } from "@/components/game/HomeSetup";
+import { BriefScreen, PlayScreen } from "@/components/game/PlayScreens";
+import { ClearScreen, FailScreen, SolveScreen } from "@/components/game/SolveScreens";
+import { MapScreen, StoriesScreen } from "@/components/game/StoriesMap";
 import { GameProvider, useGame } from "@/components/game/GameProvider";
-import { TitleScreen } from "@/components/game/TitleScreen";
 
 function ScreenSwitch() {
   const { ready, screen } = useGame();
   if (!ready) {
     return (
-      <div className="flex flex-1 items-center justify-center text-sm tracking-[0.2em] text-[#F8E3C2]/70">
-        OPENING DOSSIER…
+      <div className="flex flex-1 items-center justify-center text-sm font-semibold tracking-wide text-white/80">
+        Loading desk…
       </div>
     );
   }
 
   switch (screen) {
-    case "dossier":
-      return <DossierScreen />;
-    case "campaign":
-      return <CampaignScreen />;
-    case "briefing":
-      return <BriefingScreen />;
-    case "board":
-      return <BoardScreen />;
-    case "accusation":
-      return <AccusationScreen />;
-    case "victory":
-      return <VictoryScreen />;
-    case "gameover":
-      return <GameOverScreen />;
+    case "setup":
+      return <SetupScreen />;
+    case "stories":
+      return <StoriesScreen />;
+    case "map":
+      return <MapScreen />;
+    case "brief":
+      return <BriefScreen />;
+    case "play":
+      return <PlayScreen />;
+    case "solve":
+      return <SolveScreen />;
+    case "clear":
+      return <ClearScreen />;
+    case "fail":
+      return <FailScreen />;
     default:
-      return <TitleScreen />;
+      return <HomeScreen />;
   }
 }
 

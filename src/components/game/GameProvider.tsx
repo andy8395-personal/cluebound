@@ -13,7 +13,6 @@ import {
 import { chapters, FEMALE_PRESET, getChapter, getLevel, MALE_PRESET } from "@/lib/chapters";
 import { clearSave, emptySave, loadSave, persistSave } from "@/lib/save";
 import { shuffle } from "@/lib/shuffle";
-import { readTourParam, buildTour } from "@/lib/tour";
 import type {
   ActiveRun,
   Chapter,
@@ -57,6 +56,7 @@ type GameContextValue = {
   save: SaveState;
   profile: PlayerProfile | null;
   chapter: Chapter | null;
+  focusedChapterId: string | null;
   level: PuzzleLevel | null;
   run: ActiveRun | null;
   selected: string[];
@@ -64,8 +64,10 @@ type GameContextValue = {
   feedback: Feedback;
   breakthroughOpen: boolean;
   breakthroughText: string;
+  celebrate: boolean;
   saveProfile: (profile: PlayerProfile) => void;
-  startChapter: (chapterId: string) => void;
+  openStory: (chapterId: string) => void;
+  playLevel: (chapterId: string, phase: 1 | 2 | 3 | 4 | 5) => void;
   continueRun: () => void;
   toggleTile: (tileId: string) => void;
   deselectAll: () => void;
@@ -79,9 +81,10 @@ type GameContextValue = {
     location: string;
     motive: string;
   }) => boolean;
-  retryChapter: () => void;
+  retryLevel: () => void;
   resetInvestigator: () => void;
   isChapterUnlocked: (chapterId: string) => boolean;
+  levelCleared: (chapterId: string) => number;
 };
 
 const GameContext = createContext<GameContextValue | null>(null);
@@ -89,31 +92,23 @@ const GameContext = createContext<GameContextValue | null>(null);
 export function GameProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [save, setSave] = useState<SaveState>(emptySave());
-  const [screen, setScreen] = useState<Screen>("title");
+  const [screen, setScreen] = useState<Screen>("home");
+  const [focusedChapterId, setFocusedChapterId] = useState<string | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
   const [shaking, setShaking] = useState(false);
   const [feedback, setFeedback] = useState<Feedback>(null);
   const [breakthroughOpen, setBreakthroughOpen] = useState(false);
   const [breakthroughText, setBreakthroughText] = useState("");
+  const [celebrate, setCelebrate] = useState(false);
   const pendingAdvanceRef = useRef(false);
-  const tourModeRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
     Promise.resolve().then(() => {
       if (cancelled) return;
-      const tour = readTourParam();
-      if (tour) {
-        tourModeRef.current = true;
-        const staged = buildTour(tour);
-        setSave(staged.save);
-        setScreen(staged.screen);
-        setSelected(staged.selected);
-        setReady(true);
-        return;
-      }
       const loaded = loadSave();
       setSave(loaded);
+      if (loaded.playerProfile) setScreen("stories");
       setReady(true);
     });
     return () => {
@@ -122,17 +117,35 @@ export function GameProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!ready || tourModeRef.current) return;
+    if (!ready) return;
     persistSave(save);
   }, [ready, save]);
 
   const profile = save.playerProfile;
   const run = save.activeRun;
-  const chapter = run ? getChapter(run.chapterId) : null;
+  const chapter = run
+    ? getChapter(run.chapterId)
+    : focusedChapterId
+      ? getChapter(focusedChapterId)
+      : null;
   const level =
     chapter && run && run.levelPhase <= 4
       ? getLevel(chapter, run.levelPhase as 1 | 2 | 3 | 4)
       : null;
+
+  const levelCleared = useCallback(
+    (chapterId: string) => save.chapterProgress.levelCleared[chapterId] ?? 0,
+    [save.chapterProgress.levelCleared],
+  );
+
+  const isChapterUnlocked = useCallback(
+    (chapterId: string) => {
+      const index = chapters.findIndex((item) => item.id === chapterId);
+      if (index <= 0) return true;
+      return save.chapterProgress.completedChapterIds.includes(chapters[index - 1].id);
+    },
+    [save.chapterProgress.completedChapterIds],
+  );
 
   const updateRun = useCallback((patch: Partial<ActiveRun>) => {
     setSave((prev) => {
@@ -143,51 +156,93 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   const saveProfile = useCallback((next: PlayerProfile) => {
     setSave((prev) => ({ ...prev, playerProfile: next }));
-    setScreen("campaign");
+    setScreen("stories");
   }, []);
 
-  const buildRun = useCallback((chapterId: string, perk: SpecialtyPerk): ActiveRun => {
-    const found = getChapter(chapterId);
-    const first = found?.levels[0];
-    const tiles = first ? flattenTiles(first).map((tile) => tile.id) : [];
-    return {
-      chapterId,
-      levelPhase: 1,
-      strikesRemaining: maxStrikes(perk),
-      hintsRemaining: startingHints(perk),
-      solvedCategoryIds: [],
-      tileOrder: shuffle(tiles),
-    };
+  const buildRun = useCallback(
+    (chapterId: string, phase: 1 | 2 | 3 | 4 | 5, perk: SpecialtyPerk): ActiveRun => {
+      if (phase === 5) {
+        return {
+          chapterId,
+          levelPhase: 5,
+          strikesRemaining: maxStrikes(perk),
+          hintsRemaining: startingHints(perk),
+          solvedCategoryIds: [],
+          tileOrder: [],
+        };
+      }
+      const found = getChapter(chapterId);
+      const puzzle = found ? getLevel(found, phase) : null;
+      const tiles = puzzle ? flattenTiles(puzzle).map((tile) => tile.id) : [];
+      return {
+        chapterId,
+        levelPhase: phase,
+        strikesRemaining: maxStrikes(perk),
+        hintsRemaining: startingHints(perk),
+        solvedCategoryIds: [],
+        tileOrder: shuffle(tiles),
+      };
+    },
+    [],
+  );
+
+  const openStory = useCallback((chapterId: string) => {
+    setFocusedChapterId(chapterId);
+    setScreen("map");
   }, []);
 
-  const startChapter = useCallback(
-    (chapterId: string) => {
+  const playLevel = useCallback(
+    (chapterId: string, phase: 1 | 2 | 3 | 4 | 5) => {
       if (!profile) return;
-      const nextRun = buildRun(chapterId, profile.specialtyPerk);
-      setSave((prev) => ({ ...prev, activeRun: nextRun }));
+      if (phase > levelCleared(chapterId) + 1) return;
+      setFocusedChapterId(chapterId);
+      setSave((prev) => ({
+        ...prev,
+        activeRun: buildRun(chapterId, phase, profile.specialtyPerk),
+      }));
       setSelected([]);
       setFeedback(null);
-      setScreen("briefing");
+      setCelebrate(false);
+      setScreen(phase === 5 ? "solve" : "brief");
     },
-    [buildRun, profile],
+    [buildRun, levelCleared, profile],
   );
 
   const continueRun = useCallback(() => {
     if (!save.activeRun) return;
+    setFocusedChapterId(save.activeRun.chapterId);
     setSelected([]);
     setFeedback(null);
-    setScreen(save.activeRun.levelPhase === 5 ? "accusation" : "board");
+    setScreen(save.activeRun.levelPhase === 5 ? "solve" : "play");
   }, [save.activeRun]);
 
-  const isChapterUnlocked = useCallback(
-    (chapterId: string) => {
-      const index = chapters.findIndex((item) => item.id === chapterId);
-      if (index <= 0) return true;
-      const previous = chapters[index - 1];
-      return save.chapterProgress.completedChapterIds.includes(previous.id);
-    },
-    [save.chapterProgress.completedChapterIds],
-  );
+  const markLevelCleared = useCallback((chapterId: string, phase: number) => {
+    setSave((prev) => {
+      const current = prev.chapterProgress.levelCleared[chapterId] ?? 0;
+      const nextCleared = Math.max(current, phase);
+      const completed = new Set(prev.chapterProgress.completedChapterIds);
+      if (nextCleared >= 5) completed.add(chapterId);
+      const solvedCount = completed.size;
+      return {
+        ...prev,
+        playerProfile: prev.playerProfile
+          ? {
+              ...prev.playerProfile,
+              casesSolved: solvedCount,
+              currentChapter: Math.min(3, solvedCount + 1),
+            }
+          : prev.playerProfile,
+        chapterProgress: {
+          completedChapterIds: [...completed],
+          levelCleared: {
+            ...prev.chapterProgress.levelCleared,
+            [chapterId]: nextCleared,
+          },
+        },
+        activeRun: null,
+      };
+    });
+  }, []);
 
   const toggleTile = useCallback((tileId: string) => {
     setFeedback(null);
@@ -224,61 +279,19 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   const failGuess = useCallback(
     (message: string, kind: "off" | "miss") => {
-      if (!run || !profile) return;
+      if (!run) return;
       setShaking(true);
-      window.setTimeout(() => setShaking(false), 520);
-      const nextStrikes = run.strikesRemaining - 1;
+      window.setTimeout(() => setShaking(false), 480);
+      const next = run.strikesRemaining - 1;
       setFeedback({ kind, message });
-      if (nextStrikes <= 0) {
+      if (next <= 0) {
         updateRun({ strikesRemaining: 0 });
-        window.setTimeout(() => setScreen("gameover"), 700);
+        window.setTimeout(() => setScreen("fail"), 650);
         return;
       }
-      updateRun({ strikesRemaining: nextStrikes });
+      updateRun({ strikesRemaining: next });
     },
-    [profile, run, updateRun],
-  );
-
-  const advanceAfterSolve = useCallback(
-    (chapterData: Chapter, currentPhase: 1 | 2 | 3 | 4, perk: SpecialtyPerk) => {
-      const nextPhase = (currentPhase + 1) as 2 | 3 | 4 | 5;
-      if (nextPhase === 5) {
-        setSave((prev) => ({
-          ...prev,
-          activeRun: prev.activeRun
-            ? {
-                ...prev.activeRun,
-                levelPhase: 5,
-                solvedCategoryIds: [],
-                tileOrder: [],
-              }
-            : prev.activeRun,
-        }));
-        setSelected([]);
-        setScreen("accusation");
-        return;
-      }
-      const nextLevel = getLevel(chapterData, nextPhase);
-      const tiles = nextLevel ? flattenTiles(nextLevel).map((tile) => tile.id) : [];
-      setSave((prev) => ({
-        ...prev,
-        activeRun: prev.activeRun
-          ? {
-              ...prev.activeRun,
-              levelPhase: nextPhase,
-              solvedCategoryIds: [],
-              tileOrder: shuffle(tiles),
-              hintsRemaining: Math.max(
-                prev.activeRun.hintsRemaining,
-                nextPhase === 1 ? startingHints(perk) : prev.activeRun.hintsRemaining,
-              ),
-            }
-          : prev.activeRun,
-      }));
-      setSelected([]);
-      setScreen("board");
-    },
-    [],
+    [run, updateRun],
   );
 
   const analyze = useCallback(() => {
@@ -297,9 +310,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
       if (run.solvedCategoryIds.includes(categoryId)) return;
       const solved = [...run.solvedCategoryIds, categoryId];
       const category = level.categories.find((item) => item.id === categoryId);
+      setCelebrate(true);
+      window.setTimeout(() => setCelebrate(false), 700);
       setFeedback({
         kind: "solve",
-        message: category ? `Solved: ${category.title}` : "Category locked.",
+        message: category ? `Nice! ${category.title}` : "Group locked!",
       });
       setSelected([]);
       if (solved.length >= 4) {
@@ -314,15 +329,17 @@ export function GameProvider({ children }: { children: ReactNode }) {
     }
 
     const three = [...groups.values()].some((ids) => ids.length === 3);
-    failGuess(three ? "1 tile off!" : "The grouping does not hold.", three ? "off" : "miss");
+    failGuess(three ? "So close! 1 tile off" : "Not a match — try again", three ? "off" : "miss");
   }, [chapter, failGuess, level, profile, run, selected, updateRun]);
 
   const closeBreakthrough = useCallback(() => {
     setBreakthroughOpen(false);
-    if (!pendingAdvanceRef.current || !run || !chapter || !profile || !level) return;
+    if (!pendingAdvanceRef.current || !run) return;
     pendingAdvanceRef.current = false;
-    advanceAfterSolve(chapter, level.phase, profile.specialtyPerk);
-  }, [advanceAfterSolve, chapter, level, profile, run]);
+    markLevelCleared(run.chapterId, run.levelPhase);
+    setFocusedChapterId(run.chapterId);
+    setScreen("map");
+  }, [markLevelCleared, run]);
 
   const useHint = useCallback(() => {
     if (!run || !level || run.hintsRemaining <= 0) return;
@@ -338,13 +355,13 @@ export function GameProvider({ children }: { children: ReactNode }) {
     updateRun({ hintsRemaining: run.hintsRemaining - 1 });
     setFeedback({
       kind: "hint",
-      message: `Hint: two tiles from “${target.title}” are marked. Find the other pair.`,
+      message: `Hint: 2 tiles from “${target.title}” are lit. Find the pair!`,
     });
   }, [level, run, updateRun]);
 
   const submitAccusation = useCallback(
     (pick: { culprit: string; weapon: string; location: string; motive: string }) => {
-      if (!chapter || !run || !profile) return false;
+      if (!chapter || !run) return false;
       const { solution } = chapter;
       const correct =
         pick.culprit === solution.culprit &&
@@ -352,52 +369,38 @@ export function GameProvider({ children }: { children: ReactNode }) {
         pick.location === solution.location &&
         pick.motive === solution.motive;
       if (correct) {
-        setSave((prev) => {
-          const completed = new Set(prev.chapterProgress.completedChapterIds);
-          completed.add(chapter.id);
-          const solvedCount = completed.size;
-          return {
-            playerProfile: prev.playerProfile
-              ? {
-                  ...prev.playerProfile,
-                  casesSolved: solvedCount,
-                  currentChapter: Math.min(3, chapter.number + 1),
-                }
-              : prev.playerProfile,
-            chapterProgress: { completedChapterIds: [...completed] },
-            activeRun: null,
-          };
-        });
-        setScreen("victory");
+        markLevelCleared(chapter.id, 5);
+        setScreen("clear");
         return true;
       }
-      const nextStrikes = run.strikesRemaining - 1;
+      const next = run.strikesRemaining - 1;
       setFeedback({
         kind: "accuse-miss",
-        message: "The accusation does not survive cross-examination.",
+        message: "Not quite — the case still has holes.",
       });
-      if (nextStrikes <= 0) {
+      if (next <= 0) {
         updateRun({ strikesRemaining: 0 });
-        setScreen("gameover");
+        setScreen("fail");
         return false;
       }
-      updateRun({ strikesRemaining: nextStrikes });
+      updateRun({ strikesRemaining: next });
       return false;
     },
-    [chapter, profile, run, updateRun],
+    [chapter, markLevelCleared, run, updateRun],
   );
 
-  const retryChapter = useCallback(() => {
+  const retryLevel = useCallback(() => {
     if (!run || !profile) return;
-    startChapter(run.chapterId);
-  }, [profile, run, startChapter]);
+    playLevel(run.chapterId, run.levelPhase);
+  }, [playLevel, profile, run]);
 
   const resetInvestigator = useCallback(() => {
     clearSave();
     setSave(emptySave());
     setSelected([]);
     setFeedback(null);
-    setScreen("dossier");
+    setFocusedChapterId(null);
+    setScreen("setup");
   }, []);
 
   const value = useMemo<GameContextValue>(
@@ -408,6 +411,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       save,
       profile,
       chapter,
+      focusedChapterId,
       level,
       run,
       selected,
@@ -415,8 +419,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
       feedback,
       breakthroughOpen,
       breakthroughText,
+      celebrate,
       saveProfile,
-      startChapter,
+      openStory,
+      playLevel,
       continueRun,
       toggleTile,
       deselectAll,
@@ -425,25 +431,31 @@ export function GameProvider({ children }: { children: ReactNode }) {
       useHint,
       closeBreakthrough,
       submitAccusation,
-      retryChapter,
+      retryLevel,
       resetInvestigator,
       isChapterUnlocked,
+      levelCleared,
     }),
     [
       analyze,
       breakthroughOpen,
       breakthroughText,
+      celebrate,
       chapter,
       closeBreakthrough,
       continueRun,
       deselectAll,
       feedback,
+      focusedChapterId,
       isChapterUnlocked,
       level,
+      levelCleared,
+      openStory,
+      playLevel,
       profile,
       ready,
       resetInvestigator,
-      retryChapter,
+      retryLevel,
       run,
       save,
       saveProfile,
@@ -451,7 +463,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
       selected,
       shaking,
       shuffleBoard,
-      startChapter,
       submitAccusation,
       toggleTile,
       useHint,

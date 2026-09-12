@@ -1,7 +1,12 @@
 export type Gender = "male" | "female";
 export type SpecialtyPerk = "deductive_reasoning" | "sharp_instincts";
 
-export type CategoryKind = "suspects" | "weapons" | "motives" | "locations" | "documents";
+export type CategoryKind =
+  | "suspects"
+  | "weapons"
+  | "motives"
+  | "locations"
+  | "documents";
 
 export type PlayerProfile = {
   gender: Gender;
@@ -14,6 +19,7 @@ export type PlayerProfile = {
 
 export type ChapterProgress = {
   completedChapterIds: string[];
+  levelCleared: Record<string, number>;
 };
 
 export type ActiveRun = {
@@ -62,6 +68,9 @@ export type Chapter = {
   setting: string;
   victim: string;
   summary: string;
+  blurb: string;
+  emoji: string;
+  accent: string;
   solution: Accusation;
   accusationOptions: {
     culprits: string[];
@@ -74,11 +83,19 @@ export type Chapter = {
 };
 
 export type Screen =
-  | "title"
-  | "dossier"
-  | "campaign"
-  | "briefing"
-  | "board"
-  | "accusation"
-  | "victory"
-  | "gameover";
+  | "home"
+  | "setup"
+  | "stories"
+  | "map"
+  | "brief"
+  | "play"
+  | "solve"
+  | "clear"
+  | "fail";
+
+export type LevelNode = {
+  phase: 1 | 2 | 3 | 4 | 5;
+  title: string;
+  emoji: string;
+  kind: "puzzle" | "finale";
+};

@@ -1,16 +1,27 @@
-import type { Chapter } from "@/lib/types";
+import type { Chapter, LevelNode } from "@/lib/types";
 
 export const MALE_PRESET = "Arthur Pendelton";
 export const FEMALE_PRESET = "Evelyn Vance";
+
+export const LEVEL_NODES: LevelNode[] = [
+  { phase: 1, title: "Crime Scene", emoji: "🔍", kind: "puzzle" },
+  { phase: 2, title: "Paper Trail", emoji: "📄", kind: "puzzle" },
+  { phase: 3, title: "Broken Alibis", emoji: "⏱️", kind: "puzzle" },
+  { phase: 4, title: "Interrogation", emoji: "💬", kind: "puzzle" },
+  { phase: 5, title: "The Charge", emoji: "⚖️", kind: "finale" },
+];
 
 export const chapters: Chapter[] = [
   {
     id: "case_01_silent_inheritance",
     number: 1,
-    caseCode: "CASE 01",
+    caseCode: "STORY 1",
     title: "The Silent Inheritance",
-    setting: "Blackwood Manor Estate",
+    setting: "Blackwood Manor",
     victim: "Lord Sterling Blackwood",
+    blurb: "A locked manor. A warm cup of tea. A will that never got read.",
+    emoji: "🏰",
+    accent: "#0D9488",
     summary:
       "Lord Blackwood is found dead in his private study before he can read a revised will. The house is locked. Four people had keys. The tea is still warm.",
     solution: {
@@ -173,10 +184,13 @@ export const chapters: Chapter[] = [
   {
     id: "case_02_midnight_opera",
     number: 2,
-    caseCode: "CASE 02",
+    caseCode: "STORY 2",
     title: "Midnight at the Grand Opera",
-    setting: "Royal Metropolitan Opera House",
+    setting: "Royal Metropolitan Opera",
     victim: "Prima Donna Victoria Vance",
+    blurb: "A falling goblet. A mid-aria collapse. Four careers waiting in the wings.",
+    emoji: "🎭",
+    accent: "#DB2777",
     summary:
       "The star soprano collapses mid-solo. The house lights catch a falling goblet. Four careers were waiting in the wings.",
     solution: {
@@ -339,10 +353,13 @@ export const chapters: Chapter[] = [
   {
     id: "case_03_masquerade",
     number: 3,
-    caseCode: "CASE 03",
+    caseCode: "STORY 3",
     title: "The Masquerade Murders",
     setting: "Venetian Palace Gala",
     victim: "Count Alessandro",
+    blurb: "Masks, forged markers, and a balcony that never told the truth.",
+    emoji: "🎴",
+    accent: "#7C3AED",
     summary:
       "A high-society gala ends when the host is found behind a harlequin mask. The orchestra still plays. The courtyard is wet with canal mist and something else.",
     solution: {
