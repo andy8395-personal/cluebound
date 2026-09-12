@@ -13,6 +13,7 @@ import {
 import { chapters, FEMALE_PRESET, getChapter, getLevel, MALE_PRESET } from "@/lib/chapters";
 import { clearSave, emptySave, loadSave, persistSave } from "@/lib/save";
 import { shuffle } from "@/lib/shuffle";
+import { readTourParam, buildTour } from "@/lib/tour";
 import type {
   ActiveRun,
   Chapter,
@@ -95,11 +96,22 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [breakthroughOpen, setBreakthroughOpen] = useState(false);
   const [breakthroughText, setBreakthroughText] = useState("");
   const pendingAdvanceRef = useRef(false);
+  const tourModeRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
     Promise.resolve().then(() => {
       if (cancelled) return;
+      const tour = readTourParam();
+      if (tour) {
+        tourModeRef.current = true;
+        const staged = buildTour(tour);
+        setSave(staged.save);
+        setScreen(staged.screen);
+        setSelected(staged.selected);
+        setReady(true);
+        return;
+      }
       const loaded = loadSave();
       setSave(loaded);
       setReady(true);
@@ -110,7 +122,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!ready) return;
+    if (!ready || tourModeRef.current) return;
     persistSave(save);
   }, [ready, save]);
 

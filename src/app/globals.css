@@ -336,3 +336,97 @@
     font-size: 0.82rem;
   }
 }
+
+.phase-rail {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  overflow-x: auto;
+  padding: 0.15rem 0;
+}
+
+.phase-step {
+  position: relative;
+  display: flex;
+  min-width: 3.6rem;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.phase-num {
+  display: flex;
+  height: 1.45rem;
+  width: 1.45rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid #662039;
+  background: #1d070f;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #a89080;
+  z-index: 1;
+}
+
+.phase-label {
+  font-size: 0.58rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #f8e3c2a6;
+}
+
+.phase-join {
+  position: absolute;
+  top: 0.7rem;
+  left: calc(50% + 0.8rem);
+  width: calc(100% - 1.6rem);
+  height: 1px;
+  background: #662039;
+}
+
+.phase-step.is-now .phase-num {
+  border-color: #f59e0b;
+  background: #f59e0b;
+  color: #1e080f;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.45);
+}
+
+.phase-step.is-now .phase-label {
+  color: #ffe885;
+}
+
+.phase-step.is-done .phase-num {
+  border-color: #10b981;
+  background: #047857;
+  color: #ecfdf5;
+}
+
+.wax-seal {
+  margin: 0 auto 0.4rem;
+  display: flex;
+  height: 3.4rem;
+  width: 3.4rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 2px solid #fbbf24;
+  background: radial-gradient(circle at 35% 30%, #ef4444, #7f1d1d 70%);
+  box-shadow: 0 8px 0 #3b0a12, 0 0 18px rgba(245, 158, 11, 0.25);
+  font-family: var(--font-cinzel), serif;
+  font-size: 1.1rem;
+  color: #ffe885;
+}
+
+.charge-slip {
+  margin-top: 1rem;
+  border: 1px dashed #92400e;
+  border-radius: 0.8rem;
+  background: #1d070f;
+  padding: 0.75rem 0.9rem;
+  color: #fde68a;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}

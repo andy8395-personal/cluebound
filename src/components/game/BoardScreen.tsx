@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { PhaseRail } from "@/components/game/PhaseRail";
 import { injectName } from "@/lib/chapters";
 import { detectiveName } from "@/lib/names";
 import type { CategoryKind } from "@/lib/types";
@@ -101,6 +102,9 @@ export function BoardScreen() {
               ))}
             </div>
           </div>
+        </div>
+        <div className="mt-3">
+          <PhaseRail current={level.phase} />
         </div>
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[0.7rem] text-[#F8E3C2]/70">
           <span>

@@ -2,6 +2,7 @@
 
 import { DetectiveSilhouette } from "@/components/game/DetectiveSilhouette";
 import { useGame } from "@/components/game/GameProvider";
+import { PhaseRail } from "@/components/game/PhaseRail";
 import { Button } from "@/components/ui/button";
 import { chapters } from "@/lib/chapters";
 import { detectiveName } from "@/lib/names";
@@ -38,6 +39,9 @@ export function CampaignScreen() {
           </p>
         </div>
       </header>
+      <div className="mt-3 dossier-card px-3 py-3">
+        <PhaseRail current={1} />
+      </div>
 
       {save.activeRun ? (
         <Button className="cta-primary mt-4 h-11" onClick={continueRun}>

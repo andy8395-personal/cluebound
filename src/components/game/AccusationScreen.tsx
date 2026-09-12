@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useGame } from "@/components/game/GameProvider";
+import { PhaseRail } from "@/components/game/PhaseRail";
 import { Button } from "@/components/ui/button";
 import { detectiveName } from "@/lib/names";
 
@@ -20,7 +21,10 @@ export function AccusationScreen() {
     <section className="mx-auto flex w-full max-w-xl flex-1 flex-col px-4 py-5">
       <article className="dossier-card px-4 py-5 sm:px-6">
         <p className="text-[0.65rem] tracking-[0.24em] text-brass">LEVEL 5 · THE ACCUSATION</p>
-        <h2 className="mt-1 font-heading text-2xl text-[#F8E3C2]">Name the crime</h2>
+        <div className="mt-3">
+          <PhaseRail current={5} />
+        </div>
+        <h2 className="mt-3 font-heading text-2xl text-[#F8E3C2]">Name the crime</h2>
         <p className="mt-2 text-sm text-[#F8E3C2]/75">
           {detectiveName(profile.name)} must link culprit, weapon, location, and motive. A false
           charge costs a strike.
@@ -59,6 +63,11 @@ export function AccusationScreen() {
           value={motive}
           onChange={setMotive}
         />
+
+        <div className="charge-slip">
+          {culprit ?? "—"} used {weapon ?? "—"} in the {location ?? "—"} out of{" "}
+          {motive ?? "—"}.
+        </div>
 
         <Button
           className="cta-primary mt-6 h-12 w-full text-base"

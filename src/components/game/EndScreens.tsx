@@ -3,6 +3,7 @@
 import { DetectiveSilhouette } from "@/components/game/DetectiveSilhouette";
 import { useGame } from "@/components/game/GameProvider";
 import { Button } from "@/components/ui/button";
+import { PhaseRail } from "@/components/game/PhaseRail";
 import { chapters } from "@/lib/chapters";
 import { detectiveName } from "@/lib/names";
 
@@ -22,6 +23,9 @@ export function VictoryScreen() {
           <DetectiveSilhouette gender={profile.gender} />
         </div>
         <p className="mt-2 text-[0.65rem] tracking-[0.28em] text-brass">CASE CLOSED</p>
+        <div className="mt-3">
+          <PhaseRail current={5} />
+        </div>
         <h2 className="font-heading text-3xl text-[#FFE885]">{chapter.title}</h2>
         <p className="mt-3 font-heading text-lg text-[#F8E3C2]">
           {detectiveName(profile.name)} delivers the charge.

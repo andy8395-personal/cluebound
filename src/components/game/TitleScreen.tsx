@@ -1,7 +1,8 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { PhaseRail } from "@/components/game/PhaseRail";
 import { useGame } from "@/components/game/GameProvider";
+import { Button } from "@/components/ui/button";
 
 export function TitleScreen() {
   const { profile, save, setScreen, continueRun } = useGame();
@@ -11,6 +12,9 @@ export function TitleScreen() {
   return (
     <section className="flex flex-1 flex-col items-center justify-center px-4 py-10">
       <div className="dossier-card w-full max-w-lg px-6 py-10 text-center sm:px-10">
+        <div className="wax-seal" aria-hidden>
+          C
+        </div>
         <p className="font-heading text-[0.7rem] tracking-[0.35em] text-brass">
           BUREAU OF INVESTIGATION
         </p>
@@ -23,6 +27,9 @@ export function TitleScreen() {
           Unravel the evidence. Unmask the killer. Sixteen clues. Four hidden
           groups. One accusation that has to hold.
         </p>
+        <div className="mt-5">
+          <PhaseRail current={1} />
+        </div>
         <div className="mt-8 flex flex-col gap-3">
           {hasRun ? (
             <Button className="cta-primary h-12 w-full text-base" onClick={continueRun}>

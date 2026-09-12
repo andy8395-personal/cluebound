@@ -1,6 +1,7 @@
 "use client";
 
 import { useGame } from "@/components/game/GameProvider";
+import { PhaseRail } from "@/components/game/PhaseRail";
 import { Button } from "@/components/ui/button";
 import { injectName } from "@/lib/chapters";
 import { detectiveName } from "@/lib/names";
@@ -19,6 +20,9 @@ export function BriefingScreen() {
           {chapter.title}
         </h2>
         <p className="mt-2 text-center text-sm text-[#D97706]">{chapter.setting}</p>
+        <div className="mt-4">
+          <PhaseRail current={1} />
+        </div>
         <div className="mt-5 space-y-3 text-sm leading-relaxed text-[#F8E3C2]/80">
           <p>{chapter.summary}</p>
           <p>
