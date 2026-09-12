@@ -3,6 +3,7 @@
 import { useGame } from "@/components/game/GameProvider";
 import { Button } from "@/components/ui/button";
 import { injectName } from "@/lib/chapters";
+import { detectiveName } from "@/lib/names";
 
 export function BriefingScreen() {
   const { chapter, profile, setScreen } = useGame();
@@ -21,7 +22,7 @@ export function BriefingScreen() {
         <div className="mt-5 space-y-3 text-sm leading-relaxed text-[#F8E3C2]/80">
           <p>{chapter.summary}</p>
           <p>
-            Det. {profile.name} takes the case. Five phases remain: Scene, Documents,
+            {detectiveName(profile.name)} takes the case. Five phases remain: Scene, Documents,
             Timeline, Interrogation, and the final Accusation.
           </p>
           <p className="text-[#F8E3C2]/65">

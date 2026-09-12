@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { injectName } from "@/lib/chapters";
+import { detectiveName } from "@/lib/names";
 import type { CategoryKind } from "@/lib/types";
 
 const KIND_CLASS: Record<CategoryKind, string> = {
@@ -81,7 +82,7 @@ export function BoardScreen() {
             </div>
             <div className="min-w-0">
               <p className="truncate text-[0.7rem] text-[#F8E3C2]/80">
-                INVESTIGATOR: Det. {profile.name}
+                INVESTIGATOR: {detectiveName(profile.name)}
               </p>
               <p className="truncate font-heading text-sm text-[#F8E3C2] sm:text-base">
                 {chapter.caseCode}: {chapter.title}

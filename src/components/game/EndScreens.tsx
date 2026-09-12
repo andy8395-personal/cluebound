@@ -4,6 +4,7 @@ import { DetectiveSilhouette } from "@/components/game/DetectiveSilhouette";
 import { useGame } from "@/components/game/GameProvider";
 import { Button } from "@/components/ui/button";
 import { chapters } from "@/lib/chapters";
+import { detectiveName } from "@/lib/names";
 
 export function VictoryScreen() {
   const { profile, save, setScreen, startChapter } = useGame();
@@ -23,7 +24,7 @@ export function VictoryScreen() {
         <p className="mt-2 text-[0.65rem] tracking-[0.28em] text-brass">CASE CLOSED</p>
         <h2 className="font-heading text-3xl text-[#FFE885]">{chapter.title}</h2>
         <p className="mt-3 font-heading text-lg text-[#F8E3C2]">
-          Det. {profile.name} delivers the charge.
+          {detectiveName(profile.name)} delivers the charge.
         </p>
         <p className="mt-4 text-sm leading-relaxed text-[#F8E3C2]/80">{chapter.closing}</p>
         <p className="mt-4 text-sm text-[#FDE68A]">
@@ -60,7 +61,7 @@ export function GameOverScreen() {
         <p className="text-[0.65rem] tracking-[0.28em] text-[#DA3633]">FILE COMPROMISED</p>
         <h2 className="mt-2 font-heading text-3xl text-[#F8E3C2]">The trail went cold</h2>
         <p className="mt-3 text-sm leading-relaxed text-[#F8E3C2]/75">
-          Det. {profile.name} spent the last strike
+          {detectiveName(profile.name)} spent the last strike
           {chapter ? ` on ${chapter.title}` : ""}. The killer still walks the rooms you
           mapped. Request a fresh board from the bureau.
         </p>

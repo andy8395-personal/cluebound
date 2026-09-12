@@ -4,6 +4,7 @@ import { DetectiveSilhouette } from "@/components/game/DetectiveSilhouette";
 import { useGame } from "@/components/game/GameProvider";
 import { Button } from "@/components/ui/button";
 import { chapters } from "@/lib/chapters";
+import { detectiveName } from "@/lib/names";
 
 export function CampaignScreen() {
   const {
@@ -27,7 +28,7 @@ export function CampaignScreen() {
         <div className="min-w-0 flex-1">
           <p className="text-[0.65rem] tracking-[0.22em] text-brass">LEAD INVESTIGATOR</p>
           <h2 className="truncate font-heading text-xl text-[#F8E3C2]">
-            Det. {profile.name}
+            {detectiveName(profile.name)}
           </h2>
           <p className="text-xs text-[#F8E3C2]/65">
             Cases closed: {profile.casesSolved} · Perk:{" "}

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useGame } from "@/components/game/GameProvider";
 import { Button } from "@/components/ui/button";
+import { detectiveName } from "@/lib/names";
 
 export function AccusationScreen() {
   const { chapter, profile, run, submitAccusation, feedback, setScreen } = useGame();
@@ -21,7 +22,7 @@ export function AccusationScreen() {
         <p className="text-[0.65rem] tracking-[0.24em] text-brass">LEVEL 5 · THE ACCUSATION</p>
         <h2 className="mt-1 font-heading text-2xl text-[#F8E3C2]">Name the crime</h2>
         <p className="mt-2 text-sm text-[#F8E3C2]/75">
-          Det. {profile.name} must link culprit, weapon, location, and motive. A false
+          {detectiveName(profile.name)} must link culprit, weapon, location, and motive. A false
           charge costs a strike.
         </p>
         <p className="mt-2 text-xs text-[#A89080]">
