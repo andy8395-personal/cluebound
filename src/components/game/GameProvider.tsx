@@ -97,12 +97,16 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const pendingAdvanceRef = useRef(false);
 
   useEffect(() => {
-    const loaded = loadSave();
-    setSave(loaded);
-    setReady(true);
-    if (loaded.playerProfile && loaded.activeRun) {
-      setScreen("title");
-    }
+    let cancelled = false;
+    Promise.resolve().then(() => {
+      if (cancelled) return;
+      const loaded = loadSave();
+      setSave(loaded);
+      setReady(true);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
